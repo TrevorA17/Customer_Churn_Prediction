@@ -1,4 +1,3 @@
-
 # Load dataset
 churn_data <- read.csv("data/Telco_customer_churn.csv", colClasses = c(
   CustomerID = "character",
