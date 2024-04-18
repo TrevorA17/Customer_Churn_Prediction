@@ -42,3 +42,23 @@ str(churn_data)
 head(churn_data)
 
 View(churn_data)
+
+#Measures of Frequency
+# Load dataset (assuming it's already loaded as churn_data)
+
+# Define categorical variables
+categorical_vars <- c("Count", "Country", "State", "City", "Zip_Code", 
+                      "Gender", "Senior_Citizen", "Partner", "Dependents",
+                      "Phone_Service", "Multiple_Lines", "Internet_Service",
+                      "Online_Security", "Online_Backup", "Device_Protection",
+                      "Tech_Support", "Streaming_TV", "Streaming_Movies",
+                      "Contract", "Paperless_Billing", "Payment_Method",
+                      "Churn_Label", "Churn_Reason")
+
+# Generate measures of frequency for each categorical variable
+for (var in categorical_vars) {
+  cat(paste("Frequency table for variable:", var, "\n"))
+  print(table(churn_data[[var]]))
+  cat("\n")
+}
+
