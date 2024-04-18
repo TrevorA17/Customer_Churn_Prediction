@@ -62,3 +62,16 @@ for (var in categorical_vars) {
   cat("\n")
 }
 
+# Load dataset (assuming it's already loaded as churn_data)
+
+# Define numerical variables
+numerical_vars <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", 
+                    "Churn_Value", "Churn_Score", "CLTV")
+
+# Generate measures of central tendency for each numerical variable
+for (var in numerical_vars) {
+  cat(paste("Measures of central tendency for variable:", var, "\n"))
+  print(summary(churn_data[[var]]))
+  cat("\n")
+}
+
