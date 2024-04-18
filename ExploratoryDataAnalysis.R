@@ -91,4 +91,35 @@ for (var in numerical_vars) {
   cat("\n")
 }
 
+# Measures of Relationship
+
+# Load required package
+library(MASS)  # For the chi-square test
+
+# Define variables
+numerical_vars <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", 
+                    "Churn_Value", "Churn_Score", "CLTV")
+
+categorical_vars <- c("Count", "Country", "State", "City", "Zip_Code", 
+                      "Gender", "Senior_Citizen", "Partner", "Dependents",
+                      "Phone_Service", "Multiple_Lines", "Internet_Service",
+                      "Online_Security", "Online_Backup", "Device_Protection",
+                      "Tech_Support", "Streaming_TV", "Streaming_Movies",
+                      "Contract", "Paperless_Billing", "Payment_Method",
+                      "Churn_Label", "Churn_Reason")
+
+# Compute measures of relationship for numerical variables (correlation)
+cat("Correlation coefficients for numerical variables:\n")
+correlation_matrix <- cor(churn_data[, numerical_vars])
+print(correlation_matrix)
+
+# Compute measures of relationship for categorical variables (chi-square test)
+for (var in categorical_vars) {
+  cat(paste("Chi-square test for variable:", var, "\n"))
+  cross_tab <- table(churn_data[[var]], churn_data$Churn_Label)
+  chi_square_test <- chisq.test(cross_tab)
+  print(chi_square_test)
+  cat("\n")
+}
+
 
