@@ -62,8 +62,7 @@ for (var in categorical_vars) {
   cat("\n")
 }
 
-# Load dataset (assuming it's already loaded as churn_data)
-
+# Measures of central tendency
 # Define numerical variables
 numerical_vars <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", 
                     "Churn_Value", "Churn_Score", "CLTV")
@@ -74,4 +73,22 @@ for (var in numerical_vars) {
   print(summary(churn_data[[var]]))
   cat("\n")
 }
+
+#Measures of Distribution
+
+# Load required package
+library(e1071)
+
+# Define numerical variables
+numerical_vars <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", 
+                    "Churn_Value", "Churn_Score", "CLTV")
+
+# Generate measures of distribution for each numerical variable
+for (var in numerical_vars) {
+  cat(paste("Measures of distribution for variable:", var, "\n"))
+  cat("Skewness:", skewness(churn_data[[var]]), "\n")
+  cat("Kurtosis:", kurtosis(churn_data[[var]]), "\n")
+  cat("\n")
+}
+
 
