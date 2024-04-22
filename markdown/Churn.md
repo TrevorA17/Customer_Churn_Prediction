@@ -1772,3 +1772,1357 @@ for (var in single_level_vars) {
   churn_data[[var]] <- as.numeric(churn_data[[var]])
 }
 ```
+
+``` r
+# Load required package
+library(caret)  # For data splitting
+```
+
+    ## Loading required package: ggplot2
+
+    ## Loading required package: lattice
+
+``` r
+# Set seed for reproducibility
+set.seed(123)
+
+# Specify the proportion of data for training (e.g., 80%)
+train_proportion <- 0.8
+
+# Split the dataset into training and testing sets
+train_indices <- createDataPartition(churn_data$Churn_Label, p = train_proportion, list = FALSE)
+train_data <- churn_data[train_indices, ]
+test_data <- churn_data[-train_indices, ]
+
+# Display the dimensions of the training and testing sets
+cat("Training set size:", nrow(train_data), "\n")
+```
+
+    ## Training set size: 5636
+
+``` r
+cat("Testing set size:", nrow(test_data), "\n")
+```
+
+    ## Testing set size: 1407
+
+``` r
+# Load required package
+library(boot)  # For bootstrapping
+```
+
+    ## 
+    ## Attaching package: 'boot'
+
+    ## The following object is masked from 'package:lattice':
+    ## 
+    ##     melanoma
+
+``` r
+# Define your statistic of interest (mean)
+mean_function <- function(data, indices) {
+  sample <- data[indices, "Tenure_Months"]
+  return(mean(sample))
+}
+
+# Set the number of bootstrap iterations
+num_iterations <- 1000
+
+# Perform bootstrapping
+bootstrap_results <- boot(data = churn_data, statistic = mean_function, R = num_iterations)
+
+# Summarize bootstrap results
+print(bootstrap_results)
+```
+
+    ## 
+    ## ORDINARY NONPARAMETRIC BOOTSTRAP
+    ## 
+    ## 
+    ## Call:
+    ## boot(data = churn_data, statistic = mean_function, R = num_iterations)
+    ## 
+    ## 
+    ## Bootstrap Statistics :
+    ##     original       bias    std. error
+    ## t1* 32.37115 -0.003900753   0.2932883
+
+``` r
+#Cross- Validation
+
+# Select subset of columns (adjust as needed)
+selected_columns <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", "Gender", "Senior_Citizen", "Churn_Label")
+
+# Subset the dataset based on selected columns
+churn_data_subset <- churn_data[, selected_columns]
+
+#Basic Cross-Validation
+# Load required package
+library(caret)
+
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Specify the method as "svmRadial" for SVM
+model <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl)
+
+# Print the model results
+print(model)
+```
+
+    ## Support Vector Machines with Radial Basis Function Kernel 
+    ## 
+    ## 7043 samples
+    ##    5 predictor
+    ##    2 classes: 'No', 'Yes' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Cross-Validated (5 fold) 
+    ## Summary of sample sizes: 5634, 5634, 5635, 5635, 5634 
+    ## Resampling results across tuning parameters:
+    ## 
+    ##   C     Accuracy   Kappa    
+    ##   0.25  0.7894335  0.3802241
+    ##   0.50  0.7907111  0.3829327
+    ##   1.00  0.7904273  0.3800111
+    ## 
+    ## Tuning parameter 'sigma' was held constant at a value of 0.3035786
+    ## Accuracy was used to select the optimal model using the largest value.
+    ## The final values used for the model were sigma = 0.3035786 and C = 0.5.
+
+``` r
+#Repeated Cross-Validation
+# Set the number of folds and repetitions
+num_folds <- 5  
+num_repeats <- 3  
+
+# Define the control parameters for repeated cross-validation
+ctrl_repeated <- trainControl(method = "repeatedcv", number = num_folds, repeats = num_repeats)
+
+# Train the model using repeated k-fold cross-validation
+model_repeated <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl_repeated)
+
+# Print the model results
+print(model_repeated)
+```
+
+    ## Support Vector Machines with Radial Basis Function Kernel 
+    ## 
+    ## 7043 samples
+    ##    5 predictor
+    ##    2 classes: 'No', 'Yes' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Cross-Validated (5 fold, repeated 3 times) 
+    ## Summary of sample sizes: 5634, 5634, 5634, 5635, 5635, 5635, ... 
+    ## Resampling results across tuning parameters:
+    ## 
+    ##   C     Accuracy   Kappa    
+    ##   0.25  0.7903832  0.3840951
+    ##   0.50  0.7901936  0.3817700
+    ##   1.00  0.7898146  0.3789536
+    ## 
+    ## Tuning parameter 'sigma' was held constant at a value of 0.3244836
+    ## Accuracy was used to select the optimal model using the largest value.
+    ## The final values used for the model were sigma = 0.3244836 and C = 0.25.
+
+``` r
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the logistic regression model
+model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm", trControl = ctrl, family = "binomial")
+
+# Print the model results
+print(model_logistic)
+```
+
+    ## Generalized Linear Model 
+    ## 
+    ## 7043 samples
+    ##    5 predictor
+    ##    2 classes: 'No', 'Yes' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Cross-Validated (5 fold) 
+    ## Summary of sample sizes: 5634, 5635, 5634, 5634, 5635 
+    ## Resampling results:
+    ## 
+    ##   Accuracy   Kappa    
+    ##   0.7915661  0.4085839
+
+``` r
+# Train the decision tree model
+model_tree <- train(Churn_Label ~ ., data = churn_data_subset, method = "rpart", trControl = ctrl)
+
+# Print the model results
+print(model_tree)
+```
+
+    ## CART 
+    ## 
+    ## 7043 samples
+    ##    5 predictor
+    ##    2 classes: 'No', 'Yes' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Cross-Validated (5 fold) 
+    ## Summary of sample sizes: 5634, 5634, 5635, 5634, 5635 
+    ## Resampling results across tuning parameters:
+    ## 
+    ##   cp           Accuracy   Kappa    
+    ##   0.005082932  0.7836176  0.3761413
+    ##   0.007847334  0.7803513  0.3556907
+    ##   0.093900482  0.7576309  0.1996814
+    ## 
+    ## Accuracy was used to select the optimal model using the largest value.
+    ## The final value used for the model was cp = 0.005082932.
+
+``` r
+# Train the neural network model for classification
+model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet", trControl = ctrl)
+```
+
+    ## # weights:  8
+    ## initial  value 3369.092040 
+    ## final  value 3259.731352 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3212.353418 
+    ## iter  10 value 2991.014031
+    ## iter  20 value 2719.180817
+    ## iter  30 value 2604.468791
+    ## iter  40 value 2563.886012
+    ## iter  50 value 2560.751689
+    ## iter  60 value 2560.397618
+    ## iter  70 value 2559.727755
+    ## iter  80 value 2559.638017
+    ## iter  90 value 2559.626120
+    ## final  value 2559.624665 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3449.266292 
+    ## iter  10 value 2998.365432
+    ## iter  20 value 2784.256248
+    ## iter  30 value 2689.589834
+    ## iter  40 value 2624.369242
+    ## iter  50 value 2570.483891
+    ## iter  60 value 2562.532711
+    ## iter  70 value 2561.241559
+    ## iter  80 value 2560.662670
+    ## iter  90 value 2560.184548
+    ## iter 100 value 2559.777248
+    ## final  value 2559.777248 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 5788.842570 
+    ## iter  10 value 2820.302927
+    ## iter  20 value 2764.125304
+    ## iter  30 value 2614.854871
+    ## iter  40 value 2577.532221
+    ## iter  50 value 2565.832462
+    ## iter  60 value 2565.786521
+    ## iter  60 value 2565.786515
+    ## iter  60 value 2565.786515
+    ## final  value 2565.786515 
+    ## converged
+    ## # weights:  22
+    ## initial  value 5665.835549 
+    ## iter  10 value 3235.434844
+    ## iter  20 value 2969.290578
+    ## iter  30 value 2807.929131
+    ## iter  40 value 2795.255528
+    ## iter  50 value 2727.536990
+    ## iter  60 value 2608.553204
+    ## iter  70 value 2568.857890
+    ## iter  80 value 2545.108917
+    ## iter  90 value 2535.921812
+    ## iter 100 value 2531.446749
+    ## final  value 2531.446749 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3334.390792 
+    ## iter  10 value 2823.494344
+    ## iter  20 value 2753.266190
+    ## iter  30 value 2655.777632
+    ## iter  40 value 2621.977425
+    ## iter  50 value 2568.521722
+    ## iter  60 value 2544.951568
+    ## iter  70 value 2528.390544
+    ## iter  80 value 2523.669868
+    ## iter  90 value 2516.074010
+    ## iter 100 value 2509.704020
+    ## final  value 2509.704020 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3520.751148 
+    ## final  value 3259.731585 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3520.180533 
+    ## final  value 3259.731785 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3660.797165 
+    ## iter  10 value 3259.920378
+    ## iter  20 value 3177.974639
+    ## iter  30 value 2717.617763
+    ## iter  40 value 2694.221216
+    ## iter  50 value 2673.574520
+    ## iter  60 value 2603.343556
+    ## iter  70 value 2565.600045
+    ## iter  80 value 2548.500390
+    ## iter  90 value 2523.544976
+    ## iter 100 value 2517.702998
+    ## final  value 2517.702998 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4550.172418 
+    ## final  value 3261.057800 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3803.617826 
+    ## final  value 3261.057724 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3516.615126 
+    ## iter  10 value 2876.152045
+    ## iter  20 value 2748.001828
+    ## iter  30 value 2729.422275
+    ## iter  40 value 2644.093349
+    ## iter  50 value 2514.697303
+    ## iter  60 value 2493.508347
+    ## iter  70 value 2454.572380
+    ## iter  80 value 2448.885187
+    ## iter  90 value 2446.424317
+    ## iter 100 value 2444.220246
+    ## final  value 2444.220246 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4477.698427 
+    ## iter  10 value 3262.583571
+    ## iter  20 value 3110.122933
+    ## iter  30 value 3007.888468
+    ## iter  40 value 2715.282406
+    ## iter  50 value 2608.438443
+    ## iter  60 value 2549.441977
+    ## iter  70 value 2505.366140
+    ## iter  80 value 2501.495880
+    ## final  value 2501.472320 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3727.520571 
+    ## iter  10 value 2933.413098
+    ## iter  20 value 2866.643838
+    ## iter  30 value 2742.870062
+    ## iter  40 value 2690.902972
+    ## iter  50 value 2648.920772
+    ## iter  60 value 2620.689453
+    ## iter  70 value 2497.289507
+    ## iter  80 value 2466.186257
+    ## iter  90 value 2456.648947
+    ## iter 100 value 2451.364386
+    ## final  value 2451.364386 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3229.461895 
+    ## iter  10 value 2962.324228
+    ## iter  20 value 2793.707865
+    ## iter  30 value 2768.800262
+    ## iter  40 value 2709.917490
+    ## iter  50 value 2636.786889
+    ## iter  60 value 2550.148867
+    ## iter  70 value 2478.446819
+    ## iter  80 value 2471.717770
+    ## iter  90 value 2468.514788
+    ## iter 100 value 2457.966906
+    ## final  value 2457.966906 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4673.146237 
+    ## iter  10 value 3174.219541
+    ## iter  20 value 3069.276979
+    ## iter  30 value 3068.533532
+    ## iter  40 value 3068.405333
+    ## iter  50 value 3068.320714
+    ## final  value 3068.229612 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3221.982932 
+    ## iter  10 value 2801.601198
+    ## iter  20 value 2637.869693
+    ## iter  30 value 2503.614284
+    ## iter  40 value 2470.297470
+    ## iter  50 value 2460.734556
+    ## iter  60 value 2453.583396
+    ## iter  70 value 2450.792368
+    ## iter  80 value 2448.328349
+    ## iter  90 value 2447.448669
+    ## iter 100 value 2447.387051
+    ## final  value 2447.387051 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3527.528026 
+    ## iter  10 value 2854.692792
+    ## iter  20 value 2659.724239
+    ## iter  30 value 2632.721496
+    ## iter  40 value 2535.533010
+    ## iter  50 value 2497.203748
+    ## iter  60 value 2494.346091
+    ## iter  70 value 2493.745687
+    ## iter  80 value 2493.627115
+    ## iter  90 value 2493.572926
+    ## iter 100 value 2493.543741
+    ## final  value 2493.543741 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4406.437936 
+    ## iter  10 value 2885.270730
+    ## iter  20 value 2805.977503
+    ## iter  30 value 2764.331461
+    ## iter  40 value 2745.764846
+    ## iter  50 value 2744.150259
+    ## iter  60 value 2729.320740
+    ## iter  70 value 2693.319088
+    ## iter  80 value 2608.974187
+    ## iter  90 value 2571.158303
+    ## iter 100 value 2551.008948
+    ## final  value 2551.008948 
+    ## stopped after 100 iterations
+    ## # weights:  22
+    ## initial  value 4032.195285 
+    ## iter  10 value 2991.082075
+    ## iter  20 value 2750.835884
+    ## iter  30 value 2742.600407
+    ## iter  40 value 2729.253264
+    ## iter  50 value 2693.438677
+    ## iter  60 value 2599.912726
+    ## iter  70 value 2557.695671
+    ## iter  80 value 2550.482889
+    ## iter  90 value 2549.024178
+    ## iter 100 value 2548.534487
+    ## final  value 2548.534487 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3226.932272 
+    ## iter  10 value 2867.010692
+    ## iter  20 value 2739.802400
+    ## iter  30 value 2652.796715
+    ## iter  40 value 2568.465289
+    ## iter  50 value 2520.372152
+    ## iter  60 value 2511.890395
+    ## iter  70 value 2503.415084
+    ## iter  80 value 2500.824775
+    ## iter  90 value 2499.947877
+    ## iter 100 value 2499.463343
+    ## final  value 2499.463343 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3260.819031 
+    ## iter  10 value 3092.516778
+    ## iter  20 value 2948.931375
+    ## iter  30 value 2810.613578
+    ## iter  40 value 2695.679799
+    ## iter  50 value 2614.529256
+    ## iter  60 value 2561.491729
+    ## iter  70 value 2557.179790
+    ## iter  80 value 2556.106264
+    ## iter  80 value 2556.106253
+    ## iter  80 value 2556.106253
+    ## final  value 2556.106253 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3576.235618 
+    ## iter  10 value 3086.330252
+    ## iter  20 value 2773.621657
+    ## iter  30 value 2706.749443
+    ## iter  40 value 2659.298736
+    ## iter  50 value 2613.844473
+    ## iter  60 value 2586.708123
+    ## iter  70 value 2538.882530
+    ## iter  80 value 2525.681949
+    ## iter  90 value 2525.074618
+    ## iter 100 value 2524.924606
+    ## final  value 2524.924606 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 4011.604627 
+    ## iter  10 value 3019.465011
+    ## iter  20 value 2918.510840
+    ## iter  30 value 2714.451501
+    ## iter  40 value 2661.361433
+    ## iter  50 value 2610.004270
+    ## iter  60 value 2561.731047
+    ## iter  70 value 2531.453147
+    ## iter  80 value 2505.889969
+    ## iter  90 value 2500.025418
+    ## iter 100 value 2498.967554
+    ## final  value 2498.967554 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3976.334848 
+    ## final  value 3260.055402 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3302.376541 
+    ## iter  10 value 2744.933102
+    ## iter  20 value 2624.290561
+    ## iter  30 value 2563.248760
+    ## iter  40 value 2550.272258
+    ## iter  50 value 2548.742089
+    ## iter  60 value 2548.335182
+    ## iter  70 value 2548.085493
+    ## iter  80 value 2548.028542
+    ## iter  90 value 2548.005041
+    ## iter 100 value 2547.969049
+    ## final  value 2547.969049 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 5002.177574 
+    ## iter  10 value 3012.646599
+    ## iter  20 value 2768.991997
+    ## iter  30 value 2708.963156
+    ## iter  40 value 2675.196932
+    ## iter  50 value 2601.467241
+    ## iter  60 value 2557.755480
+    ## iter  70 value 2550.035168
+    ## iter  80 value 2548.749172
+    ## iter  90 value 2528.832986
+    ## iter 100 value 2525.018065
+    ## final  value 2525.018065 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3379.274299 
+    ## final  value 3259.731352 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3749.746877 
+    ## iter  10 value 2875.399565
+    ## iter  20 value 2743.730713
+    ## iter  30 value 2706.087407
+    ## iter  40 value 2691.480313
+    ## iter  50 value 2620.570195
+    ## iter  60 value 2549.276241
+    ## iter  70 value 2506.449365
+    ## iter  80 value 2485.638545
+    ## iter  90 value 2480.530880
+    ## iter 100 value 2478.599342
+    ## final  value 2478.599342 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3391.256597 
+    ## final  value 3259.731371 
+    ## converged
+    ## # weights:  8
+    ## initial  value 4042.938697 
+    ## iter  10 value 3221.451860
+    ## iter  20 value 3028.162037
+    ## iter  30 value 2960.679829
+    ## iter  40 value 2801.241561
+    ## iter  50 value 2668.730445
+    ## iter  60 value 2607.324664
+    ## iter  70 value 2542.371637
+    ## iter  80 value 2530.761635
+    ## iter  90 value 2530.253079
+    ## final  value 2530.227054 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3882.909621 
+    ## iter  10 value 3003.345301
+    ## iter  20 value 2773.893407
+    ## iter  30 value 2693.266932
+    ## iter  40 value 2666.580589
+    ## iter  50 value 2613.693911
+    ## iter  60 value 2504.660459
+    ## iter  70 value 2489.762223
+    ## iter  80 value 2477.317824
+    ## iter  90 value 2471.318616
+    ## iter 100 value 2470.271166
+    ## final  value 2470.271166 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 4215.291409 
+    ## iter  10 value 3263.035211
+    ## iter  20 value 3013.880695
+    ## iter  30 value 2769.896267
+    ## iter  40 value 2719.677325
+    ## iter  50 value 2637.248432
+    ## iter  60 value 2550.215390
+    ## iter  70 value 2523.728080
+    ## iter  80 value 2500.948219
+    ## iter  90 value 2494.263346
+    ## iter 100 value 2491.670211
+    ## final  value 2491.670211 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4062.841390 
+    ## iter  10 value 2916.001401
+    ## iter  20 value 2761.148638
+    ## iter  30 value 2734.352098
+    ## iter  40 value 2668.657804
+    ## iter  50 value 2608.138943
+    ## iter  60 value 2537.587465
+    ## iter  70 value 2526.476508
+    ## iter  80 value 2522.576837
+    ## iter  90 value 2521.325738
+    ## final  value 2520.919044 
+    ## converged
+    ## # weights:  22
+    ## initial  value 4894.598750 
+    ## iter  10 value 2954.690626
+    ## iter  20 value 2711.363209
+    ## iter  30 value 2641.185455
+    ## iter  40 value 2597.911393
+    ## iter  50 value 2513.179481
+    ## iter  60 value 2489.277119
+    ## iter  70 value 2483.564223
+    ## iter  80 value 2481.829720
+    ## iter  90 value 2481.121324
+    ## iter 100 value 2480.646841
+    ## final  value 2480.646841 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3834.118021 
+    ## iter  10 value 2822.038433
+    ## iter  20 value 2709.515182
+    ## iter  30 value 2676.203656
+    ## iter  40 value 2549.943066
+    ## iter  50 value 2526.377656
+    ## iter  60 value 2524.838843
+    ## iter  70 value 2524.009168
+    ## iter  80 value 2523.081422
+    ## iter  90 value 2521.047853
+    ## iter 100 value 2519.907365
+    ## final  value 2519.907365 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4183.446773 
+    ## iter  10 value 2834.176034
+    ## iter  20 value 2603.467655
+    ## iter  30 value 2534.573045
+    ## iter  40 value 2526.499834
+    ## iter  50 value 2522.090686
+    ## iter  60 value 2521.344169
+    ## iter  70 value 2521.040424
+    ## iter  80 value 2520.740369
+    ## final  value 2520.657172 
+    ## converged
+    ## # weights:  22
+    ## initial  value 9037.404421 
+    ## final  value 3259.731322 
+    ## converged
+    ## # weights:  36
+    ## initial  value 4590.625837 
+    ## iter  10 value 2995.093438
+    ## iter  20 value 2792.943986
+    ## iter  30 value 2755.190022
+    ## iter  40 value 2681.870774
+    ## iter  50 value 2645.348500
+    ## iter  60 value 2614.164343
+    ## iter  70 value 2592.382472
+    ## iter  80 value 2581.323807
+    ## iter  90 value 2580.808232
+    ## iter 100 value 2578.135895
+    ## final  value 2578.135895 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3415.343870 
+    ## iter  10 value 3260.133088
+    ## iter  20 value 2777.583988
+    ## iter  30 value 2615.853307
+    ## iter  40 value 2538.650190
+    ## iter  50 value 2531.399729
+    ## iter  60 value 2529.918290
+    ## final  value 2529.914754 
+    ## converged
+    ## # weights:  22
+    ## initial  value 5840.420219 
+    ## iter  10 value 3069.521982
+    ## iter  20 value 2791.240863
+    ## iter  30 value 2644.518707
+    ## iter  40 value 2572.303970
+    ## iter  50 value 2502.135609
+    ## iter  60 value 2483.819265
+    ## iter  70 value 2477.810063
+    ## iter  80 value 2476.927986
+    ## iter  90 value 2476.763262
+    ## iter  90 value 2476.763238
+    ## iter  90 value 2476.763232
+    ## final  value 2476.763232 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3232.156319 
+    ## iter  10 value 2929.000518
+    ## iter  20 value 2753.620267
+    ## iter  30 value 2688.406105
+    ## iter  40 value 2647.567668
+    ## iter  50 value 2596.469694
+    ## iter  60 value 2531.722371
+    ## iter  70 value 2497.339601
+    ## iter  80 value 2482.548751
+    ## iter  90 value 2480.111167
+    ## iter 100 value 2473.605236
+    ## final  value 2473.605236 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3260.932671 
+    ## final  value 3259.731512 
+    ## converged
+    ## # weights:  22
+    ## initial  value 4738.562609 
+    ## final  value 3259.731968 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3820.037843 
+    ## iter  10 value 2998.348545
+    ## iter  20 value 2749.655630
+    ## iter  30 value 2689.129406
+    ## iter  40 value 2687.319237
+    ## iter  50 value 2686.063325
+    ## iter  60 value 2684.277818
+    ## iter  70 value 2609.595010
+    ## iter  80 value 2574.351752
+    ## iter  90 value 2555.603370
+    ## iter 100 value 2534.632246
+    ## final  value 2534.632246 
+    ## stopped after 100 iterations
+    ## # weights:  22
+    ## initial  value 4356.725603 
+    ## iter  10 value 3618.481475
+    ## iter  20 value 3454.315123
+    ## iter  30 value 3310.658495
+    ## iter  40 value 3199.625739
+    ## iter  50 value 3139.089583
+    ## iter  60 value 3129.742604
+    ## iter  70 value 3117.592295
+    ## iter  80 value 3105.881525
+    ## iter  90 value 3104.334870
+    ## iter 100 value 3104.181283
+    ## final  value 3104.181283 
+    ## stopped after 100 iterations
+
+``` r
+# Print the model results
+print(model_neural)
+```
+
+    ## Neural Network 
+    ## 
+    ## 7043 samples
+    ##    5 predictor
+    ##    2 classes: 'No', 'Yes' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Cross-Validated (5 fold) 
+    ## Summary of sample sizes: 5634, 5635, 5635, 5634, 5634 
+    ## Resampling results across tuning parameters:
+    ## 
+    ##   size  decay  Accuracy   Kappa    
+    ##   1     0e+00  0.7559302  0.1566668
+    ##   1     1e-04  0.7486856  0.1265789
+    ##   1     1e-01  0.7878738  0.4038570
+    ##   3     0e+00  0.7718284  0.2549392
+    ##   3     1e-04  0.7650210  0.2368523
+    ##   3     1e-01  0.7914245  0.4047054
+    ##   5     0e+00  0.7795009  0.3264659
+    ##   5     1e-04  0.7883004  0.4114416
+    ##   5     1e-01  0.7909979  0.4051851
+    ## 
+    ## Accuracy was used to select the optimal model using the largest value.
+    ## The final values used for the model were size = 3 and decay = 0.1.
+
+``` r
+#Perfomance Comparison Using Resamples
+# Load required package
+library(caret)
+
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the logistic regression model
+model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm", trControl = ctrl, family = "binomial")
+
+# Train the decision tree model
+model_tree <- train(Churn_Label ~ ., data = churn_data_subset, method = "rpart", trControl = ctrl)
+
+# Train the neural network model
+model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet", trControl = ctrl)
+```
+
+    ## # weights:  8
+    ## initial  value 4552.170357 
+    ## iter  10 value 3259.057435
+    ## iter  20 value 2768.178332
+    ## iter  30 value 2710.003344
+    ## iter  40 value 2598.815728
+    ## iter  50 value 2523.489734
+    ## iter  60 value 2508.209047
+    ## iter  70 value 2505.668615
+    ## iter  80 value 2503.579617
+    ## iter  90 value 2503.197839
+    ## iter 100 value 2502.722994
+    ## final  value 2502.722994 
+    ## stopped after 100 iterations
+    ## # weights:  22
+    ## initial  value 3264.270590 
+    ## final  value 3259.731386 
+    ## converged
+    ## # weights:  36
+    ## initial  value 4392.402419 
+    ## iter  10 value 2943.028237
+    ## iter  20 value 2629.446452
+    ## iter  30 value 2550.127113
+    ## iter  40 value 2510.036663
+    ## iter  50 value 2506.161501
+    ## iter  60 value 2504.656531
+    ## iter  70 value 2504.298855
+    ## iter  80 value 2503.989690
+    ## iter  90 value 2503.858433
+    ## iter 100 value 2503.209891
+    ## final  value 2503.209891 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4426.627631 
+    ## iter  10 value 3221.899158
+    ## iter  20 value 2777.073173
+    ## iter  30 value 2727.923012
+    ## iter  40 value 2658.418536
+    ## iter  50 value 2590.497436
+    ## iter  60 value 2524.243104
+    ## iter  70 value 2514.963781
+    ## iter  80 value 2512.748630
+    ## final  value 2512.748498 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3376.684489 
+    ## iter  10 value 2959.417345
+    ## iter  20 value 2774.984294
+    ## iter  30 value 2688.604643
+    ## iter  40 value 2588.539221
+    ## iter  50 value 2517.046483
+    ## iter  60 value 2481.544251
+    ## iter  70 value 2472.764980
+    ## iter  80 value 2471.943398
+    ## iter  90 value 2471.736409
+    ## iter 100 value 2468.597407
+    ## final  value 2468.597407 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 8663.655672 
+    ## iter  10 value 2912.773206
+    ## iter  20 value 2777.146613
+    ## iter  30 value 2693.195207
+    ## iter  40 value 2605.060409
+    ## iter  50 value 2555.260314
+    ## iter  60 value 2515.277639
+    ## iter  70 value 2481.258209
+    ## iter  80 value 2476.216607
+    ## iter  90 value 2464.818987
+    ## iter 100 value 2458.956320
+    ## final  value 2458.956320 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3486.591706 
+    ## iter  10 value 3011.179673
+    ## iter  20 value 2739.459150
+    ## iter  30 value 2726.638529
+    ## iter  40 value 2703.988547
+    ## iter  50 value 2686.502491
+    ## iter  60 value 2648.566793
+    ## iter  70 value 2578.983792
+    ## iter  80 value 2528.020271
+    ## iter  90 value 2507.817082
+    ## iter 100 value 2505.134235
+    ## final  value 2505.134235 
+    ## stopped after 100 iterations
+    ## # weights:  22
+    ## initial  value 4976.358827 
+    ## iter  10 value 2934.830193
+    ## iter  20 value 2695.198126
+    ## iter  30 value 2630.766240
+    ## iter  40 value 2530.385077
+    ## iter  50 value 2509.196872
+    ## iter  60 value 2505.071434
+    ## iter  70 value 2503.791286
+    ## iter  80 value 2502.968997
+    ## iter  90 value 2502.218786
+    ## iter 100 value 2493.611586
+    ## final  value 2493.611586 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 4421.902044 
+    ## iter  10 value 2853.548279
+    ## iter  20 value 2642.455246
+    ## iter  30 value 2571.858406
+    ## iter  40 value 2533.192528
+    ## iter  50 value 2514.195949
+    ## iter  60 value 2490.556699
+    ## iter  70 value 2465.316602
+    ## iter  80 value 2452.986860
+    ## iter  90 value 2451.522055
+    ## iter 100 value 2449.083931
+    ## final  value 2449.083931 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4142.840987 
+    ## final  value 3261.366291 
+    ## converged
+    ## # weights:  22
+    ## initial  value 4654.298886 
+    ## iter  10 value 2707.620526
+    ## iter  20 value 2584.121494
+    ## iter  30 value 2535.659289
+    ## iter  40 value 2531.359538
+    ## iter  50 value 2530.583532
+    ## iter  60 value 2528.995473
+    ## iter  70 value 2528.779897
+    ## iter  80 value 2528.678624
+    ## iter  90 value 2528.643311
+    ## iter 100 value 2528.637626
+    ## final  value 2528.637626 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3637.577903 
+    ## iter  10 value 2996.958181
+    ## iter  20 value 2722.907844
+    ## iter  30 value 2678.317493
+    ## iter  40 value 2559.276100
+    ## iter  50 value 2533.961617
+    ## iter  60 value 2530.453379
+    ## iter  70 value 2529.454529
+    ## iter  80 value 2528.685151
+    ## iter  90 value 2528.656136
+    ## iter 100 value 2528.631268
+    ## final  value 2528.631268 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4367.586231 
+    ## iter  10 value 3284.564672
+    ## iter  20 value 3263.326034
+    ## iter  30 value 3254.511978
+    ## iter  40 value 3007.736778
+    ## iter  50 value 2889.744507
+    ## iter  60 value 2707.612425
+    ## iter  70 value 2644.379644
+    ## iter  80 value 2553.584053
+    ## iter  90 value 2539.810394
+    ## iter 100 value 2536.929421
+    ## final  value 2536.929421 
+    ## stopped after 100 iterations
+    ## # weights:  22
+    ## initial  value 4315.166392 
+    ## iter  10 value 2923.972587
+    ## iter  20 value 2765.328180
+    ## iter  30 value 2725.026148
+    ## iter  40 value 2583.358421
+    ## iter  50 value 2561.827677
+    ## iter  60 value 2544.598977
+    ## iter  70 value 2503.659554
+    ## iter  80 value 2492.507808
+    ## iter  90 value 2488.879574
+    ## iter 100 value 2487.934370
+    ## final  value 2487.934370 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 4221.438011 
+    ## iter  10 value 3055.394802
+    ## iter  20 value 2758.363513
+    ## iter  30 value 2736.195209
+    ## iter  40 value 2666.195021
+    ## iter  50 value 2595.396577
+    ## iter  60 value 2549.747664
+    ## iter  70 value 2534.609106
+    ## iter  80 value 2497.851002
+    ## iter  90 value 2492.925180
+    ## iter 100 value 2478.139290
+    ## final  value 2478.139290 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 5969.486838 
+    ## final  value 3261.380343 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3565.881620 
+    ## iter  10 value 2972.543382
+    ## iter  20 value 2724.633902
+    ## iter  30 value 2674.348202
+    ## iter  40 value 2627.409331
+    ## iter  50 value 2553.356686
+    ## iter  60 value 2533.752239
+    ## iter  70 value 2522.715309
+    ## iter  80 value 2488.273654
+    ## iter  90 value 2482.186919
+    ## iter 100 value 2480.442754
+    ## final  value 2480.442754 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 6478.860421 
+    ## iter  10 value 3090.678967
+    ## iter  20 value 2887.335289
+    ## iter  30 value 2702.176675
+    ## iter  40 value 2602.604207
+    ## iter  50 value 2543.559264
+    ## iter  60 value 2533.672280
+    ## iter  70 value 2531.037210
+    ## iter  80 value 2507.097788
+    ## iter  90 value 2485.937162
+    ## iter 100 value 2482.245968
+    ## final  value 2482.245968 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3711.699411 
+    ## final  value 3259.731352 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3763.339157 
+    ## iter  10 value 2894.979426
+    ## iter  20 value 2703.882747
+    ## iter  30 value 2679.548350
+    ## iter  40 value 2620.178104
+    ## iter  50 value 2557.164566
+    ## iter  60 value 2546.325844
+    ## iter  70 value 2535.022070
+    ## final  value 2534.216186 
+    ## converged
+    ## # weights:  36
+    ## initial  value 5902.800056 
+    ## iter  10 value 2957.805974
+    ## iter  20 value 2851.684917
+    ## iter  30 value 2659.838124
+    ## iter  40 value 2566.227737
+    ## iter  50 value 2556.799810
+    ## iter  60 value 2556.233544
+    ## iter  70 value 2554.436099
+    ## iter  80 value 2527.720025
+    ## iter  90 value 2512.900538
+    ## iter 100 value 2502.683582
+    ## final  value 2502.683582 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3581.469751 
+    ## iter  10 value 3272.128146
+    ## iter  20 value 3228.241431
+    ## iter  30 value 3086.471503
+    ## iter  40 value 3043.655110
+    ## iter  50 value 2928.955650
+    ## iter  60 value 2599.313050
+    ## iter  70 value 2560.376252
+    ## iter  80 value 2550.670679
+    ## iter  90 value 2550.298897
+    ## final  value 2550.287721 
+    ## converged
+    ## # weights:  22
+    ## initial  value 4679.387186 
+    ## iter  10 value 3197.334622
+    ## iter  20 value 2753.059403
+    ## iter  30 value 2691.581572
+    ## iter  40 value 2605.933361
+    ## iter  50 value 2535.133597
+    ## iter  60 value 2514.669171
+    ## iter  70 value 2512.670853
+    ## iter  80 value 2511.481020
+    ## iter  90 value 2506.564792
+    ## iter 100 value 2503.909570
+    ## final  value 2503.909570 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3272.636352 
+    ## iter  10 value 2827.179687
+    ## iter  20 value 2740.550613
+    ## iter  30 value 2701.867103
+    ## iter  40 value 2624.656652
+    ## iter  50 value 2560.446739
+    ## iter  60 value 2548.835042
+    ## iter  70 value 2527.883817
+    ## iter  80 value 2519.308403
+    ## iter  90 value 2496.901871
+    ## iter 100 value 2494.079365
+    ## final  value 2494.079365 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3955.827997 
+    ## final  value 3259.731690 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3676.564999 
+    ## iter  10 value 2872.402777
+    ## iter  20 value 2776.478396
+    ## iter  30 value 2749.696613
+    ## iter  40 value 2739.764023
+    ## iter  50 value 2734.824452
+    ## iter  60 value 2724.796529
+    ## iter  70 value 2691.406960
+    ## iter  80 value 2655.386828
+    ## iter  90 value 2575.451686
+    ## iter 100 value 2546.093786
+    ## final  value 2546.093786 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3459.836440 
+    ## iter  10 value 2877.779450
+    ## iter  20 value 2797.852434
+    ## iter  30 value 2779.538544
+    ## iter  40 value 2778.459357
+    ## iter  50 value 2778.415753
+    ## iter  60 value 2763.543703
+    ## iter  70 value 2703.865985
+    ## iter  80 value 2603.630015
+    ## iter  90 value 2551.590664
+    ## iter 100 value 2543.660611
+    ## final  value 2543.660611 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4286.402012 
+    ## final  value 3259.731399 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3756.295258 
+    ## iter  10 value 2876.342218
+    ## iter  20 value 2773.572453
+    ## iter  30 value 2729.301156
+    ## iter  40 value 2635.521293
+    ## iter  50 value 2545.979563
+    ## iter  60 value 2532.497626
+    ## iter  70 value 2530.018563
+    ## iter  80 value 2529.381710
+    ## iter  90 value 2528.522992
+    ## iter 100 value 2528.015773
+    ## final  value 2528.015773 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 4007.294777 
+    ## iter  10 value 2885.103279
+    ## iter  20 value 2771.049297
+    ## iter  30 value 2755.813426
+    ## iter  40 value 2734.051547
+    ## iter  50 value 2731.147822
+    ## final  value 2731.016409 
+    ## converged
+    ## # weights:  8
+    ## initial  value 3949.454701 
+    ## iter  10 value 3221.941235
+    ## iter  20 value 2946.522603
+    ## iter  30 value 2704.442807
+    ## iter  40 value 2626.235948
+    ## iter  50 value 2557.479183
+    ## iter  60 value 2539.762916
+    ## iter  70 value 2537.788950
+    ## final  value 2537.270445 
+    ## converged
+    ## # weights:  22
+    ## initial  value 5479.343827 
+    ## iter  10 value 3032.900879
+    ## iter  20 value 2765.632009
+    ## iter  30 value 2714.212775
+    ## iter  40 value 2679.090186
+    ## iter  50 value 2650.354357
+    ## iter  60 value 2549.577447
+    ## iter  70 value 2493.942662
+    ## iter  80 value 2483.148682
+    ## iter  90 value 2478.887224
+    ## final  value 2478.789670 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3265.572138 
+    ## iter  10 value 2978.800603
+    ## iter  20 value 2772.846273
+    ## iter  30 value 2715.865022
+    ## iter  40 value 2679.146443
+    ## iter  50 value 2580.222526
+    ## iter  60 value 2518.526290
+    ## iter  70 value 2489.369367
+    ## iter  80 value 2478.784867
+    ## iter  90 value 2470.359682
+    ## iter 100 value 2464.244098
+    ## final  value 2464.244098 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3488.818019 
+    ## iter  10 value 2966.297755
+    ## iter  20 value 2870.201149
+    ## iter  30 value 2773.642667
+    ## iter  40 value 2753.810109
+    ## iter  50 value 2742.804591
+    ## iter  60 value 2707.495933
+    ## iter  70 value 2680.523952
+    ## iter  80 value 2585.308971
+    ## iter  90 value 2546.661606
+    ## iter 100 value 2534.680859
+    ## final  value 2534.680859 
+    ## stopped after 100 iterations
+    ## # weights:  22
+    ## initial  value 4409.028921 
+    ## iter  10 value 2835.421408
+    ## iter  20 value 2707.411217
+    ## iter  30 value 2580.165897
+    ## iter  40 value 2536.659188
+    ## iter  50 value 2517.664146
+    ## iter  60 value 2496.251140
+    ## iter  70 value 2491.226921
+    ## iter  80 value 2484.932222
+    ## iter  90 value 2482.351502
+    ## iter 100 value 2481.721984
+    ## final  value 2481.721984 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3672.401646 
+    ## iter  10 value 2933.760234
+    ## iter  20 value 2675.044685
+    ## iter  30 value 2578.845330
+    ## iter  40 value 2525.737041
+    ## iter  50 value 2501.678179
+    ## iter  60 value 2478.758253
+    ## iter  70 value 2473.635896
+    ## iter  80 value 2471.833707
+    ## iter  90 value 2471.048940
+    ## iter 100 value 2470.765172
+    ## final  value 2470.765172 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 3385.709318 
+    ## final  value 3259.731354 
+    ## converged
+    ## # weights:  22
+    ## initial  value 4592.175207 
+    ## iter  10 value 2908.512301
+    ## iter  20 value 2725.591363
+    ## iter  30 value 2625.483173
+    ## iter  40 value 2554.608191
+    ## iter  50 value 2546.902229
+    ## iter  60 value 2546.268501
+    ## iter  70 value 2545.520028
+    ## iter  80 value 2544.268578
+    ## iter  80 value 2544.268555
+    ## final  value 2544.268555 
+    ## converged
+    ## # weights:  36
+    ## initial  value 3371.894759 
+    ## iter  10 value 3031.740411
+    ## iter  20 value 2782.006503
+    ## iter  30 value 2673.512804
+    ## iter  40 value 2611.184841
+    ## iter  50 value 2596.536173
+    ## iter  60 value 2577.188288
+    ## iter  70 value 2538.524230
+    ## iter  80 value 2519.012324
+    ## iter  90 value 2499.637592
+    ## iter 100 value 2492.814277
+    ## final  value 2492.814277 
+    ## stopped after 100 iterations
+    ## # weights:  8
+    ## initial  value 4194.999140 
+    ## iter  10 value 3259.689255
+    ## iter  20 value 2939.212403
+    ## iter  30 value 2795.841747
+    ## iter  40 value 2709.762170
+    ## iter  50 value 2592.213833
+    ## iter  60 value 2556.432873
+    ## iter  70 value 2552.988149
+    ## iter  80 value 2552.246593
+    ## iter  80 value 2552.246589
+    ## iter  80 value 2552.246589
+    ## final  value 2552.246589 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3406.857287 
+    ## iter  10 value 3218.849664
+    ## iter  20 value 2923.296925
+    ## iter  30 value 2720.596049
+    ## iter  40 value 2680.820446
+    ## iter  50 value 2605.197226
+    ## iter  60 value 2541.361518
+    ## iter  70 value 2528.340325
+    ## iter  80 value 2502.219016
+    ## iter  90 value 2495.147942
+    ## iter 100 value 2490.643655
+    ## final  value 2490.643655 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 3195.056343 
+    ## iter  10 value 2943.666520
+    ## iter  20 value 2767.410374
+    ## iter  30 value 2611.805934
+    ## iter  40 value 2545.365991
+    ## iter  50 value 2520.071243
+    ## iter  60 value 2505.407960
+    ## iter  70 value 2499.379001
+    ## iter  80 value 2497.891961
+    ## iter  90 value 2497.663949
+    ## final  value 2497.568600 
+    ## converged
+    ## # weights:  8
+    ## initial  value 3370.446851 
+    ## final  value 3259.731180 
+    ## converged
+    ## # weights:  22
+    ## initial  value 3169.880300 
+    ## iter  10 value 2785.260742
+    ## iter  20 value 2658.124426
+    ## iter  30 value 2634.906401
+    ## iter  40 value 2607.461341
+    ## iter  50 value 2527.454040
+    ## iter  60 value 2507.138906
+    ## iter  70 value 2503.828661
+    ## iter  80 value 2503.461016
+    ## iter  90 value 2503.216143
+    ## iter 100 value 2502.965810
+    ## final  value 2502.965810 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 4091.943147 
+    ## iter  10 value 2959.120969
+    ## iter  20 value 2726.573332
+    ## iter  30 value 2632.355940
+    ## iter  40 value 2587.844449
+    ## iter  50 value 2548.925277
+    ## iter  60 value 2546.363166
+    ## iter  70 value 2545.948470
+    ## iter  80 value 2538.854141
+    ## iter  90 value 2496.864495
+    ## iter 100 value 2495.005548
+    ## final  value 2495.005548 
+    ## stopped after 100 iterations
+    ## # weights:  36
+    ## initial  value 6302.633846 
+    ## iter  10 value 3854.532647
+    ## iter  20 value 3795.678471
+    ## iter  30 value 3394.226382
+    ## iter  40 value 3220.765368
+    ## iter  50 value 3181.935528
+    ## iter  60 value 3135.075608
+    ## iter  70 value 3113.309768
+    ## iter  80 value 3108.737703
+    ## iter  90 value 3106.158247
+    ## iter 100 value 3103.818576
+    ## final  value 3103.818576 
+    ## stopped after 100 iterations
+
+``` r
+# Create a list of models
+models <- list(logistic = model_logistic, tree = model_tree, neural = model_neural)
+
+# Compare model performance using resamples
+resamples <- resamples(models)
+
+# Summarize model performance
+summary(resamples)
+```
+
+    ## 
+    ## Call:
+    ## summary.resamples(object = resamples)
+    ## 
+    ## Models: logistic, tree, neural 
+    ## Number of resamples: 5 
+    ## 
+    ## Accuracy 
+    ##               Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## logistic 0.7828247 0.7848011 0.7848011 0.7894350 0.7963094 0.7984386    0
+    ## tree     0.7757275 0.7828247 0.7842441 0.7827638 0.7848011 0.7862216    0
+    ## neural   0.7778566 0.7892122 0.7945984 0.7918508 0.7955997 0.8019872    0
+    ## 
+    ## Kappa 
+    ##               Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## logistic 0.3865127 0.3893402 0.3986231 0.4027133 0.4084708 0.4306196    0
+    ## tree     0.3297798 0.3422702 0.3555074 0.3588172 0.3793073 0.3872211    0
+    ## neural   0.3812085 0.3948811 0.4073372 0.4057618 0.4160090 0.4293733    0

@@ -227,3 +227,163 @@ for (var in single_level_vars) {
 }
 ```
 
+```{r Data Splitting}
+# Load required package
+library(caret)  # For data splitting
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Specify the proportion of data for training (e.g., 80%)
+train_proportion <- 0.8
+
+# Split the dataset into training and testing sets
+train_indices <- createDataPartition(churn_data$Churn_Label, p = train_proportion, list = FALSE)
+train_data <- churn_data[train_indices, ]
+test_data <- churn_data[-train_indices, ]
+
+# Display the dimensions of the training and testing sets
+cat("Training set size:", nrow(train_data), "\n")
+cat("Testing set size:", nrow(test_data), "\n")
+```
+
+```{r Boostrapping}
+# Load required package
+library(boot)  # For bootstrapping
+
+# Define your statistic of interest (mean)
+mean_function <- function(data, indices) {
+  sample <- data[indices, "Tenure_Months"]
+  return(mean(sample))
+}
+
+# Set the number of bootstrap iterations
+num_iterations <- 1000
+
+# Perform bootstrapping
+bootstrap_results <- boot(data = churn_data, statistic = mean_function, R = num_iterations)
+
+# Summarize bootstrap results
+print(bootstrap_results)
+```
+
+```{r Cross-Validation}
+#Cross- Validation
+
+# Select subset of columns (adjust as needed)
+selected_columns <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", "Gender", "Senior_Citizen", "Churn_Label")
+
+# Subset the dataset based on selected columns
+churn_data_subset <- churn_data[, selected_columns]
+
+#Basic Cross-Validation
+# Load required package
+library(caret)
+
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Specify the method as "svmRadial" for SVM
+model <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl)
+
+# Print the model results
+print(model)
+
+
+#Repeated Cross-Validation
+# Set the number of folds and repetitions
+num_folds <- 5  
+num_repeats <- 3  
+
+# Define the control parameters for repeated cross-validation
+ctrl_repeated <- trainControl(method = "repeatedcv", number = num_folds, repeats = num_repeats)
+
+# Train the model using repeated k-fold cross-validation
+model_repeated <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl_repeated)
+
+# Print the model results
+print(model_repeated)
+```
+
+```{r Model Training}
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the logistic regression model
+model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm", trControl = ctrl, family = "binomial")
+
+# Print the model results
+print(model_logistic)
+
+# Train the decision tree model
+model_tree <- train(Churn_Label ~ ., data = churn_data_subset, method = "rpart", trControl = ctrl)
+
+# Print the model results
+print(model_tree)
+
+# Train the neural network model for classification
+model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet", trControl = ctrl)
+
+# Print the model results
+print(model_neural)
+```
+
+```{r Performance Comparison Using resamples}
+#Perfomance Comparison Using Resamples
+# Load required package
+library(caret)
+
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the logistic regression model
+model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm", trControl = ctrl, family = "binomial")
+
+# Train the decision tree model
+model_tree <- train(Churn_Label ~ ., data = churn_data_subset, method = "rpart", trControl = ctrl)
+
+# Train the neural network model
+model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet", trControl = ctrl)
+
+# Create a list of models
+models <- list(logistic = model_logistic, tree = model_tree, neural = model_neural)
+
+# Compare model performance using resamples
+resamples <- resamples(models)
+
+# Summarize model performance
+summary(resamples)
+```
+
+```{r Saving Model}
+# Saving the neural network model
+saveRDS(model_neural, "./models/saved_neural_model.rds")
+
+# Load the saved model
+loaded_neural_model <- readRDS("./models/saved_neural_model.rds")
+
+# Prepare new data for prediction (using churn dataset variables)
+new_data <- data.frame(
+  Tenure_Months = 10,
+  Monthly_Charges = 50,
+  Total_Charges = 500,
+  Contract = "Month-to-month",
+  Paperless_Billing = "Yes",
+  Payment_Method = "Electronic check",
+  Senior_Citizen = "No",
+  Dependents = "Yes",
+  Partner = "Yes",
+  Gender = "Female",
+  Internet_Service = "Fiber optic",
+  Online_Security = "Yes",
+  Tech_Support = "Yes"
+)
+
+# Use the loaded model to make predictions
+predictions_loaded_model <- predict(loaded_neural_model, newdata = new_data)
+
+# Print predictions
+print(predictions_loaded_model)
+
+```
+
