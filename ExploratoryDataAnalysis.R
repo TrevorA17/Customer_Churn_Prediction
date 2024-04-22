@@ -173,3 +173,30 @@ for (var in categorical_vars) {
   ggsave(paste("barplot_", var, ".png", sep = ""), width = 6, height = 4, dpi = 300)
 }
 
+# Multivariate Plots
+# Create scatter plots for combinations of numerical variables
+for (i in 1:length(numerical_vars)) {
+  for (j in (i + 1):length(numerical_vars)) {
+    var1 <- numerical_vars[i]
+    var2 <- numerical_vars[j]
+    ggplot(churn_data, aes(x = !!as.name(var1), y = !!as.name(var2))) +
+      geom_point(color = "skyblue", alpha = 0.7) +
+      labs(title = paste("Scatter plot of", var1, "vs", var2),
+           x = var1, y = var2) +
+      theme_minimal()
+    ggsave(paste("scatter_", var1, "_vs_", var2, ".png", sep = ""), width = 6, height = 4, dpi = 300)
+  }
+}
+
+# Create box plots for combinations of numerical and categorical variables
+for (num_var in numerical_vars) {
+  for (cat_var in categorical_vars) {
+    ggplot(churn_data, aes(x = !!as.name(cat_var), y = !!as.name(num_var))) +
+      geom_boxplot(fill = "skyblue", color = "black") +
+      labs(title = paste("Box plot of", num_var, "by", cat_var),
+           x = cat_var, y = num_var) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    ggsave(paste("boxplot_", num_var, "_by_", cat_var, ".png", sep = ""), width = 6, height = 4, dpi = 300)
+  }
+}
