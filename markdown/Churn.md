@@ -3126,3 +3126,37 @@ summary(resamples)
     ## logistic 0.3865127 0.3893402 0.3986231 0.4027133 0.4084708 0.4306196    0
     ## tree     0.3297798 0.3422702 0.3555074 0.3588172 0.3793073 0.3872211    0
     ## neural   0.3812085 0.3948811 0.4073372 0.4057618 0.4160090 0.4293733    0
+
+``` r
+# Saving the neural network model
+saveRDS(model_neural, "./models/saved_neural_model.rds")
+
+# Load the saved model
+loaded_neural_model <- readRDS("./models/saved_neural_model.rds")
+
+# Prepare new data for prediction (using churn dataset variables)
+new_data <- data.frame(
+  Tenure_Months = 10,
+  Monthly_Charges = 50,
+  Total_Charges = 500,
+  Contract = "Month-to-month",
+  Paperless_Billing = "Yes",
+  Payment_Method = "Electronic check",
+  Senior_Citizen = "No",
+  Dependents = "Yes",
+  Partner = "Yes",
+  Gender = "Female",
+  Internet_Service = "Fiber optic",
+  Online_Security = "Yes",
+  Tech_Support = "Yes"
+)
+
+# Use the loaded model to make predictions
+predictions_loaded_model <- predict(loaded_neural_model, newdata = new_data)
+
+# Print predictions
+print(predictions_loaded_model)
+```
+
+    ## [1] No
+    ## Levels: No Yes
