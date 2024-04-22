@@ -1684,3 +1684,91 @@ summary(anova_result)
     ## Residuals                     7040 6338399     900                     
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+# Missing Values
+
+# Check for missing values in the dataset
+missing_values <- colSums(is.na(churn_data))
+
+# Display columns with missing values
+cols_with_missing <- names(missing_values[missing_values > 0])
+print(cols_with_missing)
+```
+
+    ## [1] "Total_Charges"
+
+``` r
+# Summarize the count of missing values for each column
+print(missing_values)
+```
+
+    ##        CustomerID             Count           Country             State 
+    ##                 0                 0                 0                 0 
+    ##              City          Zip_Code          Lat_Long          Latitude 
+    ##                 0                 0                 0                 0 
+    ##         Longitude            Gender    Senior_Citizen           Partner 
+    ##                 0                 0                 0                 0 
+    ##        Dependents     Tenure_Months     Phone_Service    Multiple_Lines 
+    ##                 0                 0                 0                 0 
+    ##  Internet_Service   Online_Security     Online_Backup Device_Protection 
+    ##                 0                 0                 0                 0 
+    ##      Tech_Support      Streaming_TV  Streaming_Movies          Contract 
+    ##                 0                 0                 0                 0 
+    ## Paperless_Billing    Payment_Method   Monthly_Charges     Total_Charges 
+    ##                 0                 0                 0                11 
+    ##       Churn_Label       Churn_Value       Churn_Score              CLTV 
+    ##                 0                 0                 0                 0 
+    ##      Churn_Reason 
+    ##                 0
+
+``` r
+# Perform mean imputation for each column with missing values
+for (col in cols_with_missing) {
+  mean_value <- mean(churn_data[[col]], na.rm = TRUE)  # Compute mean of the column
+  churn_data[[col]][is.na(churn_data[[col]])] <- mean_value  # Replace missing values with mean
+}
+
+# Verify that missing values have been imputed
+missing_values_after_imputation <- colSums(is.na(churn_data))
+print(missing_values_after_imputation)
+```
+
+    ##        CustomerID             Count           Country             State 
+    ##                 0                 0                 0                 0 
+    ##              City          Zip_Code          Lat_Long          Latitude 
+    ##                 0                 0                 0                 0 
+    ##         Longitude            Gender    Senior_Citizen           Partner 
+    ##                 0                 0                 0                 0 
+    ##        Dependents     Tenure_Months     Phone_Service    Multiple_Lines 
+    ##                 0                 0                 0                 0 
+    ##  Internet_Service   Online_Security     Online_Backup Device_Protection 
+    ##                 0                 0                 0                 0 
+    ##      Tech_Support      Streaming_TV  Streaming_Movies          Contract 
+    ##                 0                 0                 0                 0 
+    ## Paperless_Billing    Payment_Method   Monthly_Charges     Total_Charges 
+    ##                 0                 0                 0                 0 
+    ##       Churn_Label       Churn_Value       Churn_Score              CLTV 
+    ##                 0                 0                 0                 0 
+    ##      Churn_Reason 
+    ##                 0
+
+``` r
+# Data Transformation
+# Identify factor variables with only one level
+factor_vars <- sapply(churn_data, is.factor)
+single_level_vars <- names(churn_data)[sapply(churn_data[factor_vars], function(x) length(unique(x)) == 1)]
+
+# Print variables with only one level
+print(single_level_vars)
+```
+
+    ## [1] "CustomerID"        "Count"             "Country"          
+    ## [4] "Contract"          "Paperless_Billing" "Payment_Method"
+
+``` r
+# Transform factor variables with only one level to numeric
+for (var in single_level_vars) {
+  churn_data[[var]] <- as.numeric(churn_data[[var]])
+}
+```
