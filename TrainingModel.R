@@ -134,4 +134,17 @@ model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm
 # Print the model results
 print(model_logistic)
 
+# Train the decision tree model
+model_tree <- train(Churn_Label ~ ., data = churn_data_subset, method = "rpart", trControl = ctrl)
+
+# Print the model results
+print(model_tree)
+
+# Train the neural network model for classification
+model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet", trControl = ctrl)
+
+# Print the model results
+print(model_neural)
+
+
 
