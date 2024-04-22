@@ -64,3 +64,16 @@ for (col in cols_with_missing) {
 # Verify that missing values have been imputed
 missing_values_after_imputation <- colSums(is.na(churn_data))
 print(missing_values_after_imputation)
+
+# Data Transformation
+# Identify factor variables with only one level
+factor_vars <- sapply(churn_data, is.factor)
+single_level_vars <- names(churn_data)[sapply(churn_data[factor_vars], function(x) length(unique(x)) == 1)]
+
+# Print variables with only one level
+print(single_level_vars)
+
+# Transform factor variables with only one level to numeric
+for (var in single_level_vars) {
+  churn_data[[var]] <- as.numeric(churn_data[[var]])
+}

@@ -78,3 +78,25 @@ bootstrap_results <- boot(data = churn_data, statistic = mean_function, R = num_
 
 # Summarize bootstrap results
 print(bootstrap_results)
+
+#Cross- Validation
+
+# Select subset of columns (adjust as needed)
+selected_columns <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", "Gender", "Senior_Citizen", "Churn_Label")
+
+# Subset the dataset based on selected columns
+churn_data_subset <- churn_data[, selected_columns]
+
+# Load required package
+library(caret)
+
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Specify the method as "svmRadial" for SVM
+model <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl)
+
+# Print the model results
+print(model)
+
+
