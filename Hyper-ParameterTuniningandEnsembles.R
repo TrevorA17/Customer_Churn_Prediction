@@ -42,3 +42,47 @@ str(churn_data)
 head(churn_data)
 
 View(churn_data)
+# Define the search grid for logistic regression
+grid <- expand.grid(
+  penalty = c(0.01, 0.1, 1, 10),  # Regularization penalty
+  threshold = c(0.3, 0.5, 0.7)     # Decision threshold
+)
+
+# Perform random search for hyper-parameter tuning
+set.seed(123)  # Set seed for reproducibility
+model_random <- train(
+  Churn_Label ~ ., 
+  data = churn_data_subset, 
+  method = "glm", 
+  trControl = ctrl, 
+  tuneGrid = grid,
+  tuneLength = 10  # Number of random parameter sets to evaluate
+)
+
+# Print the model results
+print(model_random)
+
+# Define the search grid for logistic regression
+grid <- expand.grid(
+  penalty = c(0.01, 0.1, 1, 10),  # Regularization penalty
+  threshold = c(0.3, 0.5, 0.7)     # Decision threshold
+)
+
+# Rename columns to 'parameter' as required by train()
+colnames(grid) <- c("parameter")
+
+# Perform grid search for hyper-parameter tuning
+model_grid <- train(
+  Churn_Label ~ ., 
+  data = churn_data_subset, 
+  method = "glm", 
+  trControl = ctrl, 
+  tuneGrid = grid,
+)
+
+# Print the model results
+print(model_grid)
+
+
+
+
