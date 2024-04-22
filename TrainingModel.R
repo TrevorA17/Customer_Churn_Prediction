@@ -115,3 +115,13 @@ model_repeated <- train(Churn_Label ~ ., data = churn_data_subset, method = "svm
 # Print the model results
 print(model_repeated)
 
+#LOOCV
+# Define the control parameters for LOOCV
+ctrl_loocv <- trainControl(method = "LOOCV")
+
+# Train the model using LOOCV
+model_loocv <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl_loocv)
+
+# Print the model results
+print(model_loocv)
+
