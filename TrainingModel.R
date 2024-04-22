@@ -87,6 +87,7 @@ selected_columns <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", "Gend
 # Subset the dataset based on selected columns
 churn_data_subset <- churn_data[, selected_columns]
 
+#Basic Cross-Validation
 # Load required package
 library(caret)
 
@@ -100,9 +101,10 @@ model <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", 
 print(model)
 
 
+#Repeated Cross-Validation
 # Set the number of folds and repetitions
-num_folds <- 5  # Change this as needed
-num_repeats <- 3  # Change this as needed
+num_folds <- 5  
+num_repeats <- 3  
 
 # Define the control parameters for repeated cross-validation
 ctrl_repeated <- trainControl(method = "repeatedcv", number = num_folds, repeats = num_repeats)
