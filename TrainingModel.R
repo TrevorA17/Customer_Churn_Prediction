@@ -125,3 +125,13 @@ model_loocv <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRad
 # Print the model results
 print(model_loocv)
 
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the logistic regression model
+model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm", trControl = ctrl, family = "binomial")
+
+# Print the model results
+print(model_logistic)
+
+
