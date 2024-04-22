@@ -122,4 +122,54 @@ for (var in categorical_vars) {
   cat("\n")
 }
 
+# ANOVA
+# Define the categorical variable (factor)
+categorical_var <- "Contract"  
+
+# Define the numerical variable (response)
+numerical_var <- "Monthly_Charges"  
+
+# Perform ANOVA
+anova_result <- aov(churn_data[[numerical_var]] ~ churn_data[[categorical_var]])
+
+# Summarize ANOVA results
+summary(anova_result)
+
+#Univariate Plots
+
+# Load required packages
+library(ggplot2)  # For creating plots
+
+# Define numerical and categorical variables
+numerical_vars <- c("Tenure_Months", "Monthly_Charges", "Total_Charges", 
+                    "Churn_Value", "Churn_Score", "CLTV")
+
+categorical_vars <- c("Count", "Country", "State", "City", "Zip_Code", 
+                      "Gender", "Senior_Citizen", "Partner", "Dependents",
+                      "Phone_Service", "Multiple_Lines", "Internet_Service",
+                      "Online_Security", "Online_Backup", "Device_Protection",
+                      "Tech_Support", "Streaming_TV", "Streaming_Movies",
+                      "Contract", "Paperless_Billing", "Payment_Method",
+                      "Churn_Label", "Churn_Reason")
+
+# Create univariate plots for numerical variables (histograms)
+for (var in numerical_vars) {
+  ggplot(churn_data, aes(x = !!as.name(var))) +
+    geom_histogram(fill = "skyblue", color = "black", bins = 30) +
+    labs(title = paste("Histogram of", var),
+         x = var, y = "Frequency") +
+    theme_minimal()
+  ggsave(paste("histogram_", var, ".png", sep = ""), width = 6, height = 4, dpi = 300)
+}
+
+# Create univariate plots for categorical variables (bar plots)
+for (var in categorical_vars) {
+  ggplot(churn_data, aes(x = !!as.name(var))) +
+    geom_bar(fill = "skyblue", color = "black") +
+    labs(title = paste("Bar plot of", var),
+         x = var, y = "Count") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  ggsave(paste("barplot_", var, ".png", sep = ""), width = 6, height = 4, dpi = 300)
+}
 
