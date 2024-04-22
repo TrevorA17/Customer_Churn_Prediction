@@ -94,5 +94,16 @@ model_bagging <- train(
 # Print the model results
 print(model_bagging)
 
+# Train the GBM model using boosting
+model_boosting <- train(
+  Churn_Label ~ ., 
+  data = churn_data_subset, 
+  method = "gbm", 
+  trControl = ctrl
+)
+
+# Print the model results
+print(model_boosting)
+
 
 
