@@ -146,5 +146,29 @@ model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet"
 # Print the model results
 print(model_neural)
 
+#Perfomance Comparison Using Resamples
+# Load required package
+library(caret)
+
+# Define control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5)
+
+# Train the logistic regression model
+model_logistic <- train(Churn_Label ~ ., data = churn_data_subset, method = "glm", trControl = ctrl, family = "binomial")
+
+# Train the decision tree model
+model_tree <- train(Churn_Label ~ ., data = churn_data_subset, method = "rpart", trControl = ctrl)
+
+# Train the neural network model
+model_neural <- train(Churn_Label ~ ., data = churn_data_subset, method = "nnet", trControl = ctrl)
+
+# Create a list of models
+models <- list(logistic = model_logistic, tree = model_tree, neural = model_neural)
+
+# Compare model performance using resamples
+resamples <- resamples(models)
+
+# Summarize model performance
+summary(resamples)
 
 
