@@ -42,3 +42,21 @@ str(churn_data)
 head(churn_data)
 
 View(churn_data)
+
+# Load required package
+library(caret)  # For data splitting
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Specify the proportion of data for training (e.g., 80%)
+train_proportion <- 0.8
+
+# Split the dataset into training and testing sets
+train_indices <- createDataPartition(churn_data$Churn_Label, p = train_proportion, list = FALSE)
+train_data <- churn_data[train_indices, ]
+test_data <- churn_data[-train_indices, ]
+
+# Display the dimensions of the training and testing sets
+cat("Training set size:", nrow(train_data), "\n")
+cat("Testing set size:", nrow(test_data), "\n")
