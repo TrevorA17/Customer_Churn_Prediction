@@ -100,3 +100,16 @@ model <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", 
 print(model)
 
 
+# Set the number of folds and repetitions
+num_folds <- 5  # Change this as needed
+num_repeats <- 3  # Change this as needed
+
+# Define the control parameters for repeated cross-validation
+ctrl_repeated <- trainControl(method = "repeatedcv", number = num_folds, repeats = num_repeats)
+
+# Train the model using repeated k-fold cross-validation
+model_repeated <- train(Churn_Label ~ ., data = churn_data_subset, method = "svmRadial", trControl = ctrl_repeated)
+
+# Print the model results
+print(model_repeated)
+
