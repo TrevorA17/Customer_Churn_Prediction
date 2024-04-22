@@ -105,5 +105,27 @@ model_boosting <- train(
 # Print the model results
 print(model_boosting)
 
+# Define base models
+models <- list(
+  logistic = model_logistic,
+  tree = model_tree,
+  neural = model_neural
+)
 
+# Load the necessary libraries
+library(caret)
+library(caretEnsemble)
 
+# Define base models with methodList
+models <- list(
+  logistic = list(model = model_logistic, method = "glm"),
+  tree = list(model = model_tree, method = "rpart"),
+  neural = list(model = model_neural, method = "nnet")
+)
+
+# Train the stacked model using a meta-learner (logistic regression)
+stack_control <- trainControl(method = "cv", number = 5)
+model_stacked <- caretStack(models, method = "glm", trControl = stack_control)
+
+# Print the model results
+print(model_stacked)
