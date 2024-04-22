@@ -200,3 +200,15 @@ for (num_var in numerical_vars) {
     ggsave(paste("boxplot_", num_var, "_by_", cat_var, ".png", sep = ""), width = 6, height = 4, dpi = 300)
   }
 }
+
+# Missing Values
+
+# Check for missing values in the dataset
+missing_values <- colSums(is.na(churn_data))
+
+# Display columns with missing values
+cols_with_missing <- names(missing_values[missing_values > 0])
+print(cols_with_missing)
+
+# Summarize the count of missing values for each column
+print(missing_values)
