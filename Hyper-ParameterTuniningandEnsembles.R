@@ -83,6 +83,16 @@ model_grid <- train(
 # Print the model results
 print(model_grid)
 
+# Train the random forest model using bagging
+model_bagging <- train(
+  Churn_Label ~ ., 
+  data = churn_data_subset, 
+  method = "rf", 
+  trControl = ctrl
+)
+
+# Print the model results
+print(model_bagging)
 
 
 
