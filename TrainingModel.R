@@ -60,3 +60,21 @@ test_data <- churn_data[-train_indices, ]
 # Display the dimensions of the training and testing sets
 cat("Training set size:", nrow(train_data), "\n")
 cat("Testing set size:", nrow(test_data), "\n")
+
+# Load required package
+library(boot)  # For bootstrapping
+
+# Define your statistic of interest (mean)
+mean_function <- function(data, indices) {
+  sample <- data[indices, "Tenure_Months"]
+  return(mean(sample))
+}
+
+# Set the number of bootstrap iterations
+num_iterations <- 1000
+
+# Perform bootstrapping
+bootstrap_results <- boot(data = churn_data, statistic = mean_function, R = num_iterations)
+
+# Summarize bootstrap results
+print(bootstrap_results)
