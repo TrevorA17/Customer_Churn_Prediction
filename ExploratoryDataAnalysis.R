@@ -212,3 +212,13 @@ print(cols_with_missing)
 
 # Summarize the count of missing values for each column
 print(missing_values)
+
+# Perform mean imputation for each column with missing values
+for (col in cols_with_missing) {
+  mean_value <- mean(churn_data[[col]], na.rm = TRUE)  # Compute mean of the column
+  churn_data[[col]][is.na(churn_data[[col]])] <- mean_value  # Replace missing values with mean
+}
+
+# Verify that missing values have been imputed
+missing_values_after_imputation <- colSums(is.na(churn_data))
+print(missing_values_after_imputation)
